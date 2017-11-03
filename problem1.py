@@ -39,7 +39,7 @@ def main():
     for zonepath , result in instances['items'].items():
         if 'instances' in result:
             for instance in result['instances']:
-                if instance.get('labels', {} ).get('persistent', 'false') == 'false':
+                if instance.get('labels', {} ).get('persistent', 'false') != 'true' and instance['status'] == 'RUNNING':
                     zone = zonepath.split('/')[1]
                     stopRes = stopInstance( instance['name'] , compute , projId , zone )
                     warnings +=  [ (instance['name'] , w ) for w in stopRes.get( 'warnings' , [] )]
@@ -47,15 +47,8 @@ def main():
                     if 'error' not in instance:
                         stopped.append(instance['name'])
 
-    notify( '''
-Stopped instances:
-{}
-Warnings:
-{}
-Errors:
-{}
-'''.format(*map(json.dumps, [stopped, warnings, errors])))
-    
+    if stopped or warnings or errors:
+        notify('\nStopped instances:\n{}Warnings:\n{}\nErrors:\n{}\n'.format(*map(json.dumps, [stopped, warnings, errors])))
     
     
 if __name__ == "__main__":
